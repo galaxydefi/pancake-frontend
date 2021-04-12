@@ -3,6 +3,7 @@ import styled from 'styled-components'
 
 export interface TooltipProps {
   content: React.ReactNode
+  className?: string
 }
 
 const TooltipContent = styled.div`
@@ -12,7 +13,6 @@ const TooltipContent = styled.div`
   color: ${({ theme }) => theme.tooltip.text};
   width: max-content;
   display: none;
-  padding: 16px;
   max-height: 500px;
   z-index: ${({ theme }) => theme.zIndices.modal};
   position: absolute;
@@ -44,11 +44,11 @@ const Container = styled.div`
   }
 `
 
-const Tooltip: React.FunctionComponent<TooltipProps> = ({ content, children }) => {
+const Tooltip: React.FunctionComponent<TooltipProps> = ({ content, children, className }) => {
   return (
     <Container>
       {children}
-      <TooltipContent>{content}</TooltipContent>
+      <TooltipContent className={className}>{content}</TooltipContent>
     </Container>
   )
 }

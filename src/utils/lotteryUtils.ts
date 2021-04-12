@@ -98,20 +98,20 @@ export const multiClaim = async (lotteryContract, ticketsContract, account) => {
   const calls3 = unClaimedIds.map((id) => [lotteryContract.options.address, 'getRewardView', [id]])
   const rewards = await multiCall(lotteryAbi, calls3)
 
-  let finanltokenIds = []
+  let finalTokenIds = []
   rewards.forEach((r, i) => {
     if (r > 0) {
-      finanltokenIds.push(unClaimedIds[i])
+      finalTokenIds.push(unClaimedIds[i])
     }
   })
 
-  if (finanltokenIds.length > 200) {
-    finanltokenIds = finanltokenIds.slice(0, 200)
+  if (finalTokenIds.length > 200) {
+    finalTokenIds = finalTokenIds.slice(0, 200)
   }
 
   try {
     return lotteryContract.methods
-      .multiClaim(finanltokenIds)
+      .multiClaim(finalTokenIds)
       .send({ from: account })
       .on('transactionHash', (tx) => {
         return tx.transactionHash
@@ -140,16 +140,16 @@ export const getTotalClaim = async (lotteryContract, ticketsContract, account) =
 
     const drawed = await getLotteryStatus(lotteryContract)
 
-    const finalTokenids = []
+    const finalTokenIds = []
     ticketIssues.forEach(async (ticketIssue, i) => {
       // eslint-disable-next-line no-empty
       if (!drawed && ticketIssue.toString() === issueIndex) {
       } else if (!claimedStatus[i][0]) {
-        finalTokenids.push(tokenIds[i])
+        finalTokenIds.push(tokenIds[i])
       }
     })
 
-    const calls4 = finalTokenids.map((id) => [lotteryContract.options.address, 'getRewardView', [id]])
+    const calls4 = finalTokenIds.map((id) => [lotteryContract.options.address, 'getRewardView', [id]])
 
     const rewards = await multiCall(lotteryAbi, calls4)
     const claim = rewards.reduce((p, c) => BigNumber.sum(p, c), new BigNumber(0))
@@ -187,7 +187,8 @@ export const getMatchingRewardLength = async (lotteryContract, matchNumber) => {
   }
   try {
     const amount = await lotteryContract.methods.historyAmount(issueIndex, 5 - matchNumber).call()
-    return amount / 1e18 / LOTTERY_TICKET_PRICE
+
+    return new BigNumber(amount).div(new BigNumber(10).pow(18)).div(LOTTERY_TICKET_PRICE).toNumber()
   } catch (err) {
     console.error(err)
   }

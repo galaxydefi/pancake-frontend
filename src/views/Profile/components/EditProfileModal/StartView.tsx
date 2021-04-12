@@ -7,9 +7,9 @@ import { getFullDisplayBalance } from 'utils/formatBalance'
 import { getPancakeProfileAddress } from 'utils/addressHelpers'
 import { useCake } from 'hooks/useContract'
 import useI18n from 'hooks/useI18n'
-import { useProfile } from 'state/hooks'
-import useGetProfileCosts from 'views/Profile/hooks/useGetProfileCosts'
+import useGetProfileCosts from 'hooks/useGetProfileCosts'
 import useHasCakeBalance from 'hooks/useHasCakeBalance'
+import { useProfile } from 'state/hooks'
 import { UseEditProfileResponse } from './reducer'
 import ProfileAvatar from '../ProfileAvatar'
 
@@ -44,7 +44,8 @@ const StartPage: React.FC<StartPageProps> = ({ goToApprove, goToChange, goToRemo
   const [needsApproval, setNeedsApproval] = useState(null)
   const { profile } = useProfile()
   const { numberCakeToUpdate, numberCakeToReactivate } = useGetProfileCosts()
-  const hasMinimumCakeRequired = useHasCakeBalance(profile.isActive ? numberCakeToUpdate : numberCakeToReactivate)
+  const minimumCakeRequired = profile.isActive ? numberCakeToUpdate : numberCakeToReactivate
+  const hasMinimumCakeRequired = useHasCakeBalance(minimumCakeRequired)
   const TranslateString = useI18n()
   const { account } = useWeb3React()
   const cakeContract = useCake()
@@ -78,7 +79,7 @@ const StartPage: React.FC<StartPageProps> = ({ goToApprove, goToChange, goToRemo
       <Flex alignItems="center" style={{ height: '48px' }} justifyContent="center">
         <Text as="p" color="failure">
           {!hasMinimumCakeRequired &&
-            TranslateString(999, `${getFullDisplayBalance(numberCakeToUpdate)} CAKE required to change profile pic`)}
+            TranslateString(999, `${getFullDisplayBalance(minimumCakeRequired)} CAKE required to change profile pic`)}
         </Text>
       </Flex>
       {profile.isActive ? (

@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useState } from 'react'
 import { Route, useRouteMatch, useLocation } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useAppDispatch } from 'state'
 import BigNumber from 'bignumber.js'
 import { useWeb3React } from '@web3-react/core'
 import { Image, Heading, RowType, Toggle, Text } from '@pancakeswap-libs/uikit'
@@ -24,6 +24,7 @@ import { RowProps } from './components/FarmTable/Row'
 import ToggleView from './components/ToggleView/ToggleView'
 import { DesktopColumnSchema, ViewMode } from './components/types'
 import Select, { OptionProps } from './components/Select/Select'
+import { getAddress } from '../../utils/addressHelpers'
 
 const ControlContainer = styled.div`
   display: flex;
@@ -121,7 +122,7 @@ const Farms: React.FC = () => {
   const [sortOption, setSortOption] = useState('hot')
   const prices = useGetApiPrices()
 
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   const { fastRefresh } = useRefresh()
   useEffect(() => {
     if (account) {
@@ -129,19 +130,24 @@ const Farms: React.FC = () => {
     }
   }, [account, dispatch, fastRefresh])
 
-  const [stackedOnly, setStackedOnly] = useState(false)
+  const [stakedOnly, setStakedOnly] = useState(false)
+  const isActive = !pathname.includes('history')
 
   const activeFarms = farmsLP.filter((farm) => farm.pid !== 0 && farm.multiplier !== '0X')
   const inactiveFarms = farmsLP.filter((farm) => farm.pid !== 0 && farm.multiplier === '0X')
 
-  const stackedOnlyFarms = activeFarms.filter(
+  const stakedOnlyFarms = activeFarms.filter(
+    (farm) => farm.userData && new BigNumber(farm.userData.stakedBalance).isGreaterThan(0),
+  )
+
+  const stakedInactiveFarms = inactiveFarms.filter(
     (farm) => farm.userData && new BigNumber(farm.userData.stakedBalance).isGreaterThan(0),
   )
 
   const sortFarms = (farms: FarmWithStakedValue[]): FarmWithStakedValue[] => {
     switch (sortOption) {
       case 'apr':
-        return orderBy(farms, 'apy', 'desc')
+        return orderBy(farms, (farm: FarmWithStakedValue) => farm.apy, 'desc')
       case 'multiplier':
         return orderBy(
           farms,
@@ -164,9 +170,9 @@ const Farms: React.FC = () => {
           return farm
         }
 
-        const quoteTokenPriceUsd = prices[farm.quoteToken.symbol.toLowerCase()]
+        const quoteTokenPriceUsd = prices[getAddress(farm.quoteToken.address).toLowerCase()]
         const totalLiquidity = new BigNumber(farm.lpTotalInQuoteToken).times(quoteTokenPriceUsd)
-        const apy = getFarmApy(farm.poolWeight, cakePrice, totalLiquidity)
+        const apy = isActive ? getFarmApy(farm.poolWeight, cakePrice, totalLiquidity) : 0
 
         return { ...farm, apy, liquidity: totalLiquidity }
       })
@@ -174,28 +180,23 @@ const Farms: React.FC = () => {
       if (query) {
         const lowercaseQuery = query.toLowerCase()
         farmsToDisplayWithAPY = farmsToDisplayWithAPY.filter((farm: FarmWithStakedValue) => {
-          if (farm.lpSymbol.toLowerCase().includes(lowercaseQuery)) {
-            return true
-          }
-
-          return false
+          return farm.lpSymbol.toLowerCase().includes(lowercaseQuery)
         })
       }
       return farmsToDisplayWithAPY
     },
-    [cakePrice, prices, query],
+    [cakePrice, prices, query, isActive],
   )
 
   const handleChangeQuery = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value)
   }
 
-  const isActive = !pathname.includes('history')
   let farmsStaked = []
   if (isActive) {
-    farmsStaked = stackedOnly ? farmsList(stackedOnlyFarms) : farmsList(activeFarms)
+    farmsStaked = stakedOnly ? farmsList(stakedOnlyFarms) : farmsList(activeFarms)
   } else {
-    farmsStaked = farmsList(inactiveFarms)
+    farmsStaked = stakedOnly ? farmsList(stakedInactiveFarms) : farmsList(inactiveFarms)
   }
 
   farmsStaked = sortFarms(farmsStaked)
@@ -293,7 +294,7 @@ const Farms: React.FC = () => {
     <>
       <Header>
         <Heading as="h1" size="xxl" color="secondary" mb="24px">
-          {TranslateString(999, 'Farms')}
+          {TranslateString(674, 'Farms')}
         </Heading>
         <Heading size="lg" color="text">
           {TranslateString(999, 'Stake Liquidity Pool (LP) tokens to earn.')}
@@ -304,7 +305,7 @@ const Farms: React.FC = () => {
           <ViewControls>
             <ToggleView viewMode={viewMode} onToggle={(mode: ViewMode) => setViewMode(mode)} />
             <ToggleWrapper>
-              <Toggle checked={stackedOnly} onChange={() => setStackedOnly(!stackedOnly)} scale="sm" />
+              <Toggle checked={stakedOnly} onChange={() => setStakedOnly(!stakedOnly)} scale="sm" />
               <Text> {TranslateString(1116, 'Staked only')}</Text>
             </ToggleWrapper>
             <FarmTabButtons />

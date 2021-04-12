@@ -105,26 +105,44 @@ export interface AchievementState {
 }
 
 // API Price State
-export interface PriceList {
+export interface PriceApiList {
+  /* eslint-disable camelcase */
+  [key: string]: {
+    name: string
+    symbol: string
+    price: string
+    price_BNB: string
+  }
+}
+
+export interface PriceApiListThunk {
+  /* eslint-disable camelcase */
   [key: string]: number
 }
 
 export interface PriceApiResponse {
   /* eslint-disable camelcase */
-  update_at: string
-  prices: PriceList
+  updated_at: string
+  data: PriceApiList
+}
+
+export interface PriceApiThunk {
+  /* eslint-disable camelcase */
+  updated_at: string
+  data: PriceApiListThunk
 }
 
 export interface PriceState {
   isLoading: boolean
   lastUpdated: string
-  data: PriceList
+  data: PriceApiListThunk
 }
 
 // Block
 
-export interface Block {
-  blockNumber: number
+export interface BlockState {
+  currentBlock: number
+  initialBlock: number
 }
 
 // Global state
@@ -137,5 +155,5 @@ export interface State {
   profile: ProfileState
   teams: TeamsState
   achievements: AchievementState
-  block: Block
+  block: BlockState
 }

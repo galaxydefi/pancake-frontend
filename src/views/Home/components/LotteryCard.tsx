@@ -13,9 +13,9 @@ import BuyModal from 'views/Lottery/components/TicketCard/BuyTicketModal'
 import { useLotteryAllowance } from 'hooks/useAllowance'
 import { useApproval } from 'hooks/useApproval'
 import PurchaseWarningModal from 'views/Lottery/components/TicketCard/PurchaseWarningModal'
+import UnlockButton from 'components/UnlockButton'
 import CakeWinnings from './CakeWinnings'
 import LotteryJackpot from './LotteryJackpot'
-import UnlockButton from '../../../components/UnlockButton'
 
 const StyledLotteryCard = styled(Card)`
   background-image: url('/images/ticket-bg.svg');
@@ -45,10 +45,10 @@ const Actions = styled.div`
   }
 `
 
-const FarmedStakingCard = () => {
+const LotteryCard = () => {
   const { account } = useWeb3React()
   const lotteryHasDrawn = useGetLotteryHasDrawn()
-  const [requesteClaim, setRequestedClaim] = useState(false)
+  const [requestClaim, setRequestedClaim] = useState(false)
   const TranslateString = useI18n()
   const allowance = useLotteryAllowance()
   const [onPresentApprove] = useModal(<PurchaseWarningModal />)
@@ -106,7 +106,7 @@ const FarmedStakingCard = () => {
           <Actions>
             <Button
               id="dashboard-collect-winnings"
-              disabled={getBalanceNumber(claimAmount) === 0 || requesteClaim}
+              disabled={getBalanceNumber(claimAmount) === 0 || requestClaim}
               onClick={handleClaim}
               style={{ marginRight: '8px' }}
             >
@@ -124,4 +124,4 @@ const FarmedStakingCard = () => {
   )
 }
 
-export default FarmedStakingCard
+export default LotteryCard
